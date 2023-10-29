@@ -21,7 +21,6 @@ def data_preprocessing(df):
 
     df.replace('', 0, inplace=True)
     df.fillna(0, inplace=True)
-    return df
     
 def split_feature_label(df):
     y = df['death']
@@ -51,12 +50,9 @@ def standardize_sex(value):
     else:
         return value  # or return some default value or raise an error
 
-
-
 def divide_sex_column(df):
-    df['Male'] = df['sex'].apply(lambda x: 1 if x == 'male' else 0)
-    df['Female'] = df['sex'].apply(lambda x: 1 if x == 'female' else 0)
-    df.drop('sex', axis=1, inplace=True)
+    df['Male'] = df['sex'].apply(lambda x: 1 if x == 'Male' else 0)
+    df['Female'] = df['sex'].apply(lambda x: 1 if x == 'Female' else 0)
     return df
 
 def race_mapping(df):
@@ -90,7 +86,7 @@ def handle_missing_data(df):
     
     print(f"Percentage of rows with missing values: {percent_missing:.2f}%")
     
-    # If the percentage is low,  drop those rows altogether
+    # If the percentage is low, drop those rows altogether
     if percent_missing < 5:  
         df = df.dropna()
         return df
@@ -106,7 +102,7 @@ def handle_missing_data(df):
 
 # One hot encode column with words to variable to train model
 def encodeData (df):
-    df_encoded = pd.get_dummies(df, columns=['sex', 'race', 'dnr', 'primary', 'disability','income', 'extraprimary', 'cancer'], prefix=['sex', 'race', 'dnr','primary',  'disability','income', 'extraprimary', 'cancer'])
+    df_encoded = pd.get_dummies(df, columns=['sex', 'race', 'dnr', 'primary', 'disability','income', 'extraprimary', 'cancer'], prefix=['sex', 'race', 'dnr', 'primary', 'disability','income', 'extraprimary', 'cancer'])
 
     return df_encoded
 
@@ -118,14 +114,6 @@ def train_model(X, y):
     # Split data into training and validation
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
     X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=.3, random_state=42)
-
-    # Explicitly convert to float32
-    X_train = np.array(X_train, dtype=np.float32)
-    X_val = np.array(X_val, dtype=np.float32)
-    X_test = np.array(X_test, dtype=np.float32)
-    y_train = np.array(y_train, dtype=np.float32)
-    y_val = np.array(y_val, dtype=np.float32)
-    y_test = np.array(y_test, dtype=np.float32)
 
     # Define the neural network model
     model = keras.Sequential([
@@ -150,15 +138,15 @@ def train_model(X, y):
 
 
     # Optionally, you can plot training history to visualize model performance
-    # import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt
 
-    # plt.plot(history.history['accuracy'], label='accuracy')
-    # plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
-    # plt.xlabel('Epoch')
-    # plt.ylabel('Accuracy')
-    # plt.ylim([0, 1])
-    # plt.legend(loc='lower right')
-    # plt.show()
+    plt.plot(history.history['accuracy'], label='accuracy')
+    plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.ylim([0, 1])
+    plt.legend(loc='lower right')
+    plt.show()
     
 def train_random_forest(X, y):
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -190,69 +178,55 @@ def train_regression(X, y):
     accuracy = accuracy_score(y_test, y_pred)
     print(f'Regression Test accuracy: {accuracy}')
 
-
 def apply_oversampling(X, y):
     # Apply oversampling using SMOTE
     smote = SMOTE(sampling_strategy='auto', random_state=42)
     X_resampled, y_resampled = smote.fit_resample(X, y)
     return X_resampled, y_resampled
 
-def apply_undersampling(X, y):
-    # Apply undersampling using RandomUnderSampler
-    rus = RandomUnderSampler(sampling_strategy='auto', random_state=42)
-    X_resampled, y_resampled = rus.fit_resample(X, y)
-    return X_resampled, y_resampled
+def apply_pca(X):
+    # Create a PCA instance with the specified number of components
+    pca = PCA(n_components=74)
+    # Fit and transform the feature data
+    X_pca = pca.fit_transform(X)
+    return X_pca
 
 
 if __name__ == "__main__":
     data_path = './TD_HOSPITAL_TRAIN.csv'
     df = pd.read_csv(data_path)
     df.head()
-    df = handle_missing_data(df)
     # df = data_preprocessing(df)
+    df = handle_missing_data(df)
 
+    df['sex'] = df['sex'].apply(standardize_sex)
+    # #Changing the sex column up and turning it to 0 and 1
+    divide_sex_column(df)
+
+    # #race mapping:
+    race_mapping(df)
 
     # Standardize sex value:
     df = encodeData(df)
 
-    non_numeric_cols = df.select_dtypes(exclude=[np.number]).columns.tolist()
-    print("Non-numeric columns:", non_numeric_cols)
-    
-
-    # Calculate the correlation with the column death
-    correlation_with_death = df.corr()['death']
-
-    # TO DO: incorporate correlation with training model
-    # Select features based on correlation threshold
-    threshold = 0.2
-    relevant_features = correlation_with_death[correlation_with_death.abs() > threshold].index.tolist()
-
-    # Ensure 'death' is not in the list of relevant features
-    relevant_features.remove('death')
-
+    # non_numeric_cols = df.select_dtypes(exclude=[np.number]).columns.tolist()
+    # print("Non-numeric columns:", non_numeric_cols)
     
     y, X = split_feature_label(df)
     X = standardize(X)
-    train_model(X, y)
-    train_random_forest(X, y)
-    train_svm(X, y)
-    train_regression(X, y)
+    # train_model(X, y)
+    # train_random_forest(X, y)
+    # train_svm(X, y)
+    # train_regression(X, y)
 
-    X_resampled, y_resampled = apply_oversampling(X, y)  # or apply_undersampling(X, y)
+    # Apply pcs to reduce dimensionality
+    X_pca = apply_pca(X)
+
+    X_resampled, y_resampled = apply_oversampling(X_pca, y)
     
     # Train your model with the resampled data
     train_model(X_resampled, y_resampled)
-    
-    
 
-    # #Changing the sex column up and turning it to 0 and 1
-    # divide_sex_column(df)
-
-    # #race mapping:
-    # race_mapping(df)
-
-    
-    # # print("Correlation variable: " + correlation_with_death)
-    
-    # columns = df.columns
-    # print(columns)
+    # data_features = ['sex_Male', 'sex_Female', 'race_0', 'race_1', 'race_2', 'race_3']
+    # a = df[data_features]
+    # print(a)
