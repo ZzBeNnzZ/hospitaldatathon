@@ -4,6 +4,10 @@ import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
 from tensorflow import keras
 from keras import layers
 
@@ -104,6 +108,10 @@ def encodeData (df):
 
     return df_encoded
 
+def evaluate_model(model, X_test, y_test):
+    accuracy = model.score(X_test, y_test)
+    return accuracy
+
 def train_model(X, y):
     # Split data into training and validation
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -139,21 +147,50 @@ def train_model(X, y):
     print(f'Test accuracy: {test_accuracy}')
 
 
-    # # Optionally, you can plot training history to visualize model performance
-    # import matplotlib.pyplot as plt
+    # Optionally, you can plot training history to visualize model performance
+    import matplotlib.pyplot as plt
 
-    # plt.plot(history.history['accuracy'], label='accuracy')
-    # plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
-    # plt.xlabel('Epoch')
-    # plt.ylabel('Accuracy')
-    # plt.ylim([0, 1])
-    # plt.legend(loc='lower right')
-    # plt.show()
+    plt.plot(history.history['accuracy'], label='accuracy')
+    plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.ylim([0, 1])
+    plt.legend(loc='lower right')
+    plt.show()
+    
+def train_random_forest(X, y):
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=.3, random_state=42)
+    
+    clf = RandomForestClassifier()
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f'Random Forest Test accuracy: {accuracy}')
 
+def train_svm(X, y):
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=.3, random_state=42)
+    
+    clf = SVC()
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f'SVM Test accuracy: {accuracy}')
+
+def train_regression(X, y):
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=.3, random_state=42)
+    
+    clf = LogisticRegression()
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f'Regression Test accuracy: {accuracy}')
 
 
 if __name__ == "__main__":
-    data_path = 'C:\\Users\\benle\\OneDrive\\BenLeTAMU\\TAMUDATATHON\\TDHospital\\TD_HOSPITAL_TRAIN.csv'
+    data_path = 'hospitaldatathon/TD_HOSPITAL_TRAIN.csv'
     df = pd.read_csv(data_path)
     df.head()
     df = handle_missing_data(df)
@@ -182,6 +219,11 @@ if __name__ == "__main__":
     y, X = split_feature_label(df)
     X = standardize(X)
     train_model(X, y)
+    train_random_forest(X, y)
+    train_svm(X, y)
+    train_regression(X, y)
+    
+    
 
     # #Changing the sex column up and turning it to 0 and 1
     # divide_sex_column(df)
