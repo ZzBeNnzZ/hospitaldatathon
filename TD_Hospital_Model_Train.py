@@ -10,6 +10,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from tensorflow import keras
 from keras import layers
+from imblearn.over_sampling import SMOTE
+from imblearn.under_sampling import RandomUnderSampler
 
 
 def data_preprocessing(df):
@@ -148,15 +150,15 @@ def train_model(X, y):
 
 
     # Optionally, you can plot training history to visualize model performance
-    import matplotlib.pyplot as plt
+    # import matplotlib.pyplot as plt
 
-    plt.plot(history.history['accuracy'], label='accuracy')
-    plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.ylim([0, 1])
-    plt.legend(loc='lower right')
-    plt.show()
+    # plt.plot(history.history['accuracy'], label='accuracy')
+    # plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
+    # plt.xlabel('Epoch')
+    # plt.ylabel('Accuracy')
+    # plt.ylim([0, 1])
+    # plt.legend(loc='lower right')
+    # plt.show()
     
 def train_random_forest(X, y):
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -187,6 +189,19 @@ def train_regression(X, y):
     y_pred = clf.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
     print(f'Regression Test accuracy: {accuracy}')
+
+
+def apply_oversampling(X, y):
+    # Apply oversampling using SMOTE
+    smote = SMOTE(sampling_strategy='auto', random_state=42)
+    X_resampled, y_resampled = smote.fit_resample(X, y)
+    return X_resampled, y_resampled
+
+def apply_undersampling(X, y):
+    # Apply undersampling using RandomUnderSampler
+    rus = RandomUnderSampler(sampling_strategy='auto', random_state=42)
+    X_resampled, y_resampled = rus.fit_resample(X, y)
+    return X_resampled, y_resampled
 
 
 if __name__ == "__main__":
@@ -222,6 +237,11 @@ if __name__ == "__main__":
     train_random_forest(X, y)
     train_svm(X, y)
     train_regression(X, y)
+
+    X_resampled, y_resampled = apply_oversampling(X, y)  # or apply_undersampling(X, y)
+    
+    # Train your model with the resampled data
+    train_model(X_resampled, y_resampled)
     
     
 
