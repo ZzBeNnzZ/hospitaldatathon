@@ -190,7 +190,7 @@ def train_regression(X, y):
 
 
 if __name__ == "__main__":
-    data_path = 'hospitaldatathon/TD_HOSPITAL_TRAIN.csv'
+    data_path = './TD_HOSPITAL_TRAIN.csv'
     df = pd.read_csv(data_path)
     df.head()
     df = handle_missing_data(df)
